@@ -23,6 +23,15 @@
                     <ul class="hoverlist">
                         <li><a href="{% url 'home' %}">Public Chat</a></li>
                         <li class="border-t border-gray-200 my-2"></li>
+                        {% for chatroom in request.user.chat_groups.all %}
+                        {% if chatroom.groupchat_name %}
+                            <li>
+                                <a href="{% url 'chatroom' chatroom.groupchat_name %}">
+                                    {{ chatroom.groupchat_name|slice:":30" }}
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% endfor %}    
                         <li class="px-4 py-2 text-sm text-gray-500">Private Chats</li>
                         {% for chatroom in request.user.chat_groups.all %}
                             {% if chatroom.is_private %}
@@ -59,6 +68,7 @@
                     <ul class="hoverlist [&>li>a]:justify-end">
                         <li><a href="{% url 'profile' %}">My Profile</a></li>
                         <li><a href="{% url 'profile-edit' %}">Edit Profile</a></li>
+                        <li><a href="{% url 'new-groupchat' %}">Create Chat</a></li>
                         <li><a href="{% url 'profile-settings' %}">Settings</a></li>
                         <li><a href="{% url 'account_logout' %}">Log Out</a></li>
                     </ul>

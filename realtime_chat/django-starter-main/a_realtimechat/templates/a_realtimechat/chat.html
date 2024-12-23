@@ -4,30 +4,51 @@
 {% block content %}
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 <wrapper class="block max-w-2xl mx-auto my-10 px-6">
+    {% if chat_group.groupchat_name %}
+    <h2 class="text-black">{{ chat_group.groupchat_name }}</h2>
+    {% endif %}
     <div id="chat_window" class="h-[45rem] flex flex-col bg-gray-800 rounded-2xl shadow-2xl relative p-1">
         <div class="flex justify-center text-emerald-400 bg-gray-800 p-2 sticky top-0 z-10">
-            {%if other_user%}
-            <div id ="online-icon" class= "gray-dot absolute top-2 left-2"></div>
-            <a href = "{% url 'profile' other_user.username %}">
-                <div class = "flex items-center gap-2 p-4 sticky top-0 z-10">
-                    <img class ="w-10 h-10 rounded-full object-cover" src ="{{other_user.profile.avatar}}" />
+            {% if other_user %}
+            <div id="online-icon" class="gray-dot absolute top-2 left-2"></div>
+            <a href="{% url 'profile' other_user.username %}">
+                <div class="flex items-center gap-2 p-4 sticky top-0 z-10">
+                    <img class="w-10 h-10 rounded-full object-cover" src="{{ other_user.profile.avatar }}" />
                     <div>
-                        <span class = "font-bold text-white">{{other_user.profile.name}}</span>
-                        <span class = "text-sm font-light text-gray-400">@{{other_user.username}}</span>
+                        <span class="font-bold text-white">{{ other_user.profile.name }}</span>
+                        <span class="text-sm font-light text-gray-400">@{{ other_user.username }}</span>
                     </div>
                 </div>
             </a>
-
-
-            {%else%}
-            <div id ="online-icon"></div>
-            <span id="online-count" class="pr-1">{%include 'a_realtimechat/partials/online_count.html' %}</span>others online
-            {%endif%}
+            {% elif chat_group.groupchat_name %}
+            <ul id="groupchat-members" class="flex gap-4">
+                {% for member in chat_group.members.all %}
+                <li>
+                    <a href="{% url 'profile' member.username %}" class="flex flex-col text-gray-400 items-center justify-center w-20 gap-2">
+                        <div class="relative">
+                            {% if member in chat_group.user_online.all %}
+                            <div class="green-dot border-2 border-gray-800 absolute bottom-0 right-0"></div>
+                            {% else %}
+                            <div class="graylight-dot border-2 border-gray-800 absolute bottom-0 right-0"></div>
+                            {% endif %}
+                            <img src="{{ member.profile.avatar.url }}" class="w-14 h-14 rounded-full object-cover" alt="{{ member.username }}'s avatar" />
+                            {{ member.profile.name|slice:":10" }}
+                        </div>
+                    </a>
+                </li>
+                {% empty %}
+                <li>No members found.</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div id="online-icon"></div>
+            <span id="online-count" class="pr-1">{% include 'a_realtimechat/partials/online_count.html' %}</span>others online
+            {% endif %}
         </div>
         <div id='chat_container' class="overflow-y-auto grow">
             <ul id='chat_messages' class="flex flex-col justify-end gap-2 p-4">
                 {% for message in chat_messages reversed %}
-                {%include 'a_realtimechat/chat_message.html' %}
+                {% include 'a_realtimechat/chat_message.html' %}
                 {% endfor %}
             </ul>
         </div>
@@ -35,7 +56,7 @@
             <div class="flex items-center rounded-xl px-2 py-2">
                 <form id="chat_message_form" class="w-full"
                       hx-ext="ws"
-                      ws-connect="/ws/chatroom/{{chatroom_name}}"
+                      ws-connect="/ws/chatroom/{{ chatroom_name }}"
                       ws-send
                       _="on htmx:wsAfterSend 
                          reset() me">
@@ -48,7 +69,7 @@
 </wrapper>
 {% endblock %}
 
-{%block javascript%}
+{% block javascript %}
 <script>
     function scrollToBottom() {
         const chatContainer = document.getElementById('chat_container');
@@ -59,4 +80,4 @@
     // Initial scroll
     scrollToBottom();
 </script>
-{%endblock%}
+{% endblock %}
